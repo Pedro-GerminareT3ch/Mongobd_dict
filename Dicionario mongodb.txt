@@ -1,0 +1,208 @@
+Local para rodar o código
+C:\Program Files\MongoDB\Server\8.0\bin
+mongod.exe
+
+depois:
+C:\mongo\mongosh-2.3.8-win32-x64\bin
+mongosh.exe
+
+ctrl + C --> Fechar o servidor
+sair do mongo no cmd --> exit()
+
+table -> collections
+rows -> documents (BSON)
+columns -> fields (campos)
+
+https://www.mongodb.com/pt-br/docs/manual/reference/operator/query/
+[Gg]erminare
+
+
+C O M A N D O S    I N I C I A I S:
+-----------------------------------
+show dbs: mostra todos os bancos que você tem
+show collections --> Mostrar todas as colections do banco
+
+use "alunos": cria um novo database / ou usar um existente
+
+bd. tab + tab: Mostra todos os comando de db
+bd.alunos. tab + tab: Mostra todos os comandos collection
+
+
+I N S E R T   E   D E L E T E:
+------------------------------
+inserir data:
+new Date (Ano, mês que você quer -1, dia)
+
+DENTRO DE UMA COLLECTION:
+db.alunos.insertOne({nome:"Pessoas"}) -> cria uma linha com conteúdo na collection
+db.alunos.insertMany([{doc1}, {doc2}, {doc3}]) -> cria várias ao mesmo tempo
+
+db.alunos.deleteOne({nome:"Pessoas"}) -> Deleta o documento que tenha essa informação
+db.clientes.findOneAndDelete({outro:{$exists:true}}) -> Deleta o documento e mostra qual foi deletado
+
+db.dropDatabase() --> deleta o banco
+
+F I N D  /  O P E R A D O R E S:
+--------------------------------
+operadores --> tudo que tiver um $antes
+
+db.alunos.find() --> Select *
+db.alunos.find({campo:valor_do_campo}) --> Filtragem
+db.alunos.find({idade:16, estagio:true}) --> Mais de um filtro ao mesmo tempo
+db.alunos.find({estagio:true}).count() --> Quantos documentos tem o estagio:true
+
+db.collection.findOne() --> Mostra o primeiro registro
+db.collection.findOne({campo:valor}) --> Mostra o primeiro registro colocado com campo:valor
+
+$and: Mais de um filtro ao mesmo tempo
+- Syntax: { $and: [ { <expressão> }, { <expressão> } , ...] }
+- Query: db.clientes.find({ $and: [ { "cartao_credito.status": { $exists: true } }, { "cartao_credito.status": {$ne: "ativo"} }] })
+
+$exists: Verifica se um campo existe usando True ou False
+- Syntax: { campo: { $exists: <boolean> } }
+- Query: db.alunos.find({telefone:{$exists: true}}) --> Onde tem campo telefone 
+- Query: db.alunos.find({telefone:{$exists: false}}) --> Onde não tem Campo telefone
+
+$or: OU mostra as  pessoas com um desses nomes
+- Syntax: { $or: [ {<campo1:valor1>}, {<campo2:valor2>}, ... ] }
+- Query: db.alunos.find({$or:[{nome:"Juliana"}, {nome:"Fernanda"}]}) 
+
+$in e $nin: Retorna onde pelo menos um dos itens do array cumpra a especificações
+- Syntax: { campo: { $in: [<valor1>, <valor2>, ... ] } }
+- Query: db.alunos.find({nome:{$in:["Fernanda","Juliana"]}})
+- Query: db.alunos.find({"escola.nome":{$nin:["Germinare Tech", "Germinare Vet"]}})
+
+$not: Retorna no não tem a expressão ou operador especificado
+- Syntax: { campo: { $not: { <operador-expressão> } } }
+- Query: db.alunos.find({"escola.qnd_professores": {$not: {$lt:10}}}) --> Pegar alunos acessando uma array, onde a quantidade de professores não é maior que 10
+- Query: db.clientes.find({"endereço.estado": {$not: {$eq: "SP"} }})
+
+$ne: mesma coisa que {$not: {$eq: "valor"}}
+- Syntax: { campo: { $ne: valor } }
+- Query: db.clientes.find({"endereço.estado": {$ne: "SP" }})
+
+$type: procurar pelo tipo de um campo ou valor, tem um tabela numérica de tipos
+- Syntax: { campo: { $type: <tipo da váriavel> } }
+- Query: db.alunos.find({telefone: {$type: "int"}}) 
+
+typeof: Descobrir o tipo de um campo
+- Syntax: typeof db.collection.findOne({<identificar-documento>}).campo
+- Query: typeof db.alunos.findOne({nome:"Juliana"}).telefone 
+
+$regex 😎: 
+- Syntax: { $regex: /padrão/ }
+- Query: db.alunos.find({disciplinas:{$regex: /Desenvolvimento/}})
+--------------------------------------
+SELETORES DE QUERY:
+$eq : == | Igual
+$gt : >  | Maior
+$gte: >= | Maior igual
+$lt : <  | Menor
+$lte: <= | Menor igual
+
+Syntax: { <campo>: { $eq: <valor> } }
+Query: db.alunos.find({media:{$lt:7}}) 
+--------------------------------------
+======================================
+OS CAMPOS PROCURADOS DEVEM EXISTIR EM TODOS OS DOCUMENTOS PARA FUNCIONAR
+
+$elemMatch: Procura pelo menos 1 elemento segundo o que você pediu e retorna o campo array
+- Syntax: { <campo>: { $elemMatch: { <query1>, <query2>, ... } } } 
+- Query: 
+
+$size: SÓ FUNCIONA COM em array E COM NÚMEROS INTEIROS, nada de operações, pega a quantidade de elementos
+- Syntax: { campo: { $size: <inteiro> } }
+- Query: db.alunos.find({disciplinas:{$size:4}})
+
+$expr:
+Forma de usar:
+1° Usar $expr | 2° a expressão que você quer usar | 3° A coluna em que você que usar a expressão
+- Syntax: { $expr: { <expressão> } }
+- Query: db.alunos.find({$expr:{$gte:[{$size:"$disciplinas"}, 3]}})
+======================================
+
+-- UPDATE:
+findOneandReplace() --> É o update onde porem dá para ver como o documento estava antes
+
+db.alunos.updateOne(): Também pode servir para criar um novo campo no final, caso ele não exista
+
+$set: Serve para criar novo campo ou mudar um campo existente
+- Query: db.alunos.updateOne({nome:"Juliana"}, {$set:{media:7.8}}) --> Modifica somente o primeiro com o nome:"Juliana", muda a média para 7.8
+
+Adicionar em todos os docs o mesmo campo e mesmas informações (filtro vazio):
+- Query: db.alunos.updateMany({}, { $set: { escola: { nome: "Germenare Tech", diretor: "João Pilla", qnd_professores: 4 } } } ) 
+
+$unset: Delete um campo
+- Syntax: { $unset: { campo: ""}}
+- Query: db.clientes.updateOne({ $and: [ { "cartao_credito.status": { $exists: true } }, { "cartao_credito.status": {$ne: "ativo"} }]}, {$unset: {cartao_credito: ""}})
+
+
+$setOnInsert: Você quer atualizar algo, se não encontrar na filtragem então ele cria um novo documento (evitar duplicados)
+-- upsert(parâmetro): se for false não cria um novo documento independente de ter achado ou não
+- Syntax: 
+- Query: db.clientes.updateOne({nome:"outro"}, {$setOnInsert:{teste:"teste",outro:"teste2"}}, {upsert:true})
+ 
+
+-------------------------------------------------------------------
+SÓ FUNCIONAM COM VALORES NÚMERICOS
+$inc: Atualiza um valor existente (Adição ou subtração)
+- Syntax: {$inc: {<campo> : valor_incrementado}}
+- Query: db.clientes.updateMany({cartao_credito: {$exists:true}}, {$inc:{saldo:100}})
+- Query: db.clientes.updateMany({cartao_credito: {$exists:true}}, {$inc:{saldo: -50}})
+
+$mul: Atualiza um valor existente (Multiplica o valor ou divisão)
+- Syntax: { $mul: { <campo>: <porcentagem_decimal> } }
+- Query: db.clientes.updateMany({idade: {$gt:60}}, {$mul: {saldo: 1.1}})
+
+Inc + Mul: {$inc: {$mul: 1.1}} --> se o valor for 100, retorna 210
+-------------------------------------------------------------------
+
+$min e $max: Só atualiza se o valor for menor(min), ou maior(max) que o valor especificado
+- Syntax: 
+- Query: db.clientes.updateOne({nome: "Iago"}, {$min: {saldo:101}})
+- Query: db.clientes.updateOne({nome: "Iago"}, {$max: {saldo:100}})
+
+$rename: deve sempre usar ""
+- Se quando for renomear, a array não tiver um nome diferente, o ideal é fazer um de cada vez
+- Syntax: { $rename: { "<campo>": "<novo_nome>", "<campo2>": "<novo_nome2>"} }
+- Query: db.clientes.updateMany({}, {$rename: {"endereço": "endereco"}})
+- Query: db.clientes.updateMany({}, {$rename: {"endereço": "endereco", "Campo1": "valor2"}})
+
+-------------------------------------------------------------------
+-- RETORNO COM FORMATAÇÃO SEPARADA
+
+1: Siginifica de certa forma o True (Deve aparecer)
+0: Representa o False (Não vai aparecer)
+
+-- db.clientes.find({}, {nome:1, _id:0}) mostrar somente os nomes dos documentos
+
+-- db.clientes.find({ emprestimo_disponivel:true }, {nome:1, "endereço":1, emprestimo_disponivel:1 , _id:0})
+-------------------------------------------------------------------
+
+ARRAYS:
+$pull: remove TODOS OS VALORER CORRESPONDENTES de um campo array
+- Syntax: { $pull: { <campo1>: <valor|condição>, <campo2>: <valor|condição>, ... } }
+- Query: db.clientes.updateOne({nome:"Lamelo"}, {$pull: {empretimo_tipo: 'Consignado'}}) 
+
+$push: Adiciona um valor na array sem se importar com duplicatas
+- Syntax:{ $push: { <campo1>: <valor1>, ... } }
+- Query: db.clientes.updateOne({nome:"Jucelio"}, {$push: {emprestimo_tipo: 'Pessoal'}})
+
+$addToSet: Adiciona um valor numa array e garantir que o valor seja único
+- Syntax: { $addToSet: { <campo1>: <valor1>, ... } }
+- Query: db.clientes.updateOne({nome:"Jucelio"}, {$addToSet: {emprestimo_tipo: 'FGTS'}})
+
+$pop: só faz a remoção do último ou o primeiro:
+- Syntax: { $pop: { <campo>: <-1 | 1>, ... } } [-1: primeiro | 1: último]
+- Query: db.clientes.updateOne({nome:"Jucelio"}, {$pop: {emprestimo_tipo: 1}})
+
+$pullAll:
+- Syntax:
+- Query: 
+
+$each: 
+- Use com $addToSet ou $push para adicionar vários valores a uma array <campo> se os valores não existirem no <campo>.
+- Syntax: { $addToSet: { <campo>: { $each: [ <valor1>, <valor2> ... ] } } }
+- Query: db.clientes.updateOne({nome:"Lamelo"}, {$addToSet: {emprestimo_tipo: {$each: ["FGTS" ,"Consignado", "Pessoal", "Garantia"]}}})
+
+
