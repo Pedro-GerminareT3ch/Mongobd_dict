@@ -14,7 +14,6 @@ rows -> documents (BSON)
 columns -> fields (campos)
 
 https://www.mongodb.com/pt-br/docs/manual/reference/operator/query/
-[Gg]erminare
 
 
 C O M A N D O S    I N I C I A I S:
@@ -196,13 +195,65 @@ $pop: só faz a remoção do último ou o primeiro:
 - Syntax: { $pop: { <campo>: <-1 | 1>, ... } } [-1: primeiro | 1: último]
 - Query: db.clientes.updateOne({nome:"Jucelio"}, {$pop: {emprestimo_tipo: 1}})
 
-$pullAll:
-- Syntax:
-- Query: 
+$pullAll: Remove mais de um item de uma array por vez (TODOS os correspondentes)
+- Syntax: { $pullAll: { <campo>: [ <valor1>, <valor2> ... ], ... } }
+- Query: db.lista.updateOne({_id:1}, {$pullAll:{vetor_num: [10,3]}})
 
-$each: 
+$each [Modificador]: 
 - Use com $addToSet ou $push para adicionar vários valores a uma array <campo> se os valores não existirem no <campo>.
 - Syntax: { $addToSet: { <campo>: { $each: [ <valor1>, <valor2> ... ] } } }
 - Query: db.clientes.updateOne({nome:"Lamelo"}, {$addToSet: {emprestimo_tipo: {$each: ["FGTS" ,"Consignado", "Pessoal", "Garantia"]}}})
 
+$position:
+Adiciona em uma posição específica 
+- Syntax: {
+  $push: {
+    <campo>: {
+       $each: [ <valor1>, <valor2>, ... ],
+       $position: <num>
+    }
+  }
+}
+- Query: db.lista.updateOne({_id:1}, {$push:{vetor_num:{$each:[10,3], $position:0}}})
 
+
+$slice:
+Limita a quantidade de elementos
+Final para o começo (últimos itens do array): número negativo -5
+- Syntax:  {
+  $push: {
+     <campo>: {
+       $each: [ <valor1>, <valor2>, ... ],
+       $slice: <num>
+     }
+  }
+}
+- Query: db.lista.updateOne({_id:1}, {$push:{vetor_num:{$each:[100,200], $slice: -5}}})
+- Query: db.lista.updateOne({_id:1}, {$push:{vetor_nome:{$each: [], $slice: 3}}}) [deixar os 3 primeiros]
+Colocar no meio de uma array com position: (tamanho da array / 2) + 1
+
+$sort:
+Ordena em ordem crescente [1] ou decrescente [-1]
+Colocar no meio de uma array com position: (tamanho da array / 2) + 1
+db.clientes.updateMany({emprestimo_tipo: {$exists: true}}, {$push: {emprestimo_tipo: {$each: [], $sort: 1} }})
+- Syntax: 
+{ $push: {
+     <campo>: {
+       $each: [ <valor1>, <valor2>, ... ],
+       $sort: <ordem desejada> }
+  }
+}
+- Query: db.lista.updateOne({_id:1}, {$push: { vetor_nome: {$each: [ "Zacarais", "Andre", "Bruno" ], $sort: 1}} })
+- Query (sem adicionar):  db.lista.updateOne({_id:1}, {$push: { vetor_nome: {$each: [], $sort: 1}} })
+- Query: db.clientes.updateMany({emprestimo_tipo: {$exists: true}}, {$push: {emprestimo_tipo: {$each: [], $sort: 1} }})
+--------------------------------------------
+
+.sort()
+Saída ordenada
+|  saldo: menor -> maior
+|  data_abertura: mais recente-> mais antigo
+- Query: db.clientes.find({}, {_id:0, nome:1, sobrenome:1, saldo:1}).sort({saldo:1})   
+- Query: db.clientes.find({}, {_id:0, nome:1, sobrenome:1, endereco:1}).sort({nome:1, sobrenome:1})
+- db.clientes.find({}, {_id:0, nome:1, sobrenome:1, data_abertura:1}).sort({data_abertura:1}) 
+
+db.clientes.updateMany({emprestimo_tipo: {$exists: true}}, {$push: {emprestimo_tipo: {$each: [], $sort: 1} }})
