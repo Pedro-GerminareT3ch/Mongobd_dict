@@ -26,11 +26,16 @@ use "alunos": cria um novo database / ou usar um existente
 bd. tab + tab: Mostra todos os comando de db
 bd.alunos. tab + tab: Mostra todos os comandos collection
 
+DATAS:
+new Date (Ano, mês que você quer -1, dia)
+data:new ISODate()
+SE DEIXAR VAZIO PEGA O DIA DE HOJE
+data:new ISODate(date:{$lt:new Date(2025, 1, 20)})
 
+db.clientes.updateMany({ $and: [ { saldo: { $gt: 10000 } }, { cartao_credito: { $exists: true } }, { data_abertura: { $lte: new Date(2023, 1, 20) } }] }, {$mul: {"cartao_credito.saldo": 1.65}})
+------------------------------
 I N S E R T   E   D E L E T E:
 ------------------------------
-inserir data:
-new Date (Ano, mês que você quer -1, dia)
 
 DENTRO DE UMA COLLECTION:
 db.alunos.insertOne({nome:"Pessoas"}) -> cria uma linha com conteúdo na collection
@@ -107,7 +112,7 @@ OS CAMPOS PROCURADOS DEVEM EXISTIR EM TODOS OS DOCUMENTOS PARA FUNCIONAR
 
 $elemMatch: Procura pelo menos 1 elemento segundo o que você pediu e retorna o campo array
 - Syntax: { <campo>: { $elemMatch: { <query1>, <query2>, ... } } } 
-- Query: 
+- Query: db.clientes.find({emprestimo_tipo:{$elemMatch: {$eq: "Pessoal"}}})
 
 $size: SÓ FUNCIONA COM em array E COM NÚMEROS INTEIROS, nada de operações, pega a quantidade de elementos
 - Syntax: { campo: { $size: <inteiro> } }
@@ -151,7 +156,7 @@ $inc: Atualiza um valor existente (Adição ou subtração)
 
 $mul: Atualiza um valor existente (Multiplica o valor ou divisão)
 - Syntax: { $mul: { <campo>: <porcentagem_decimal> } }
-- Query: db.clientes.updateMany({idade: {$gt:60}}, {$mul: {saldo: 1.1}})
+- Query: db.clientes.updateMany({idade: {$gt:60}}, {$mul: {saldo: 1.1}}) --> aumenta 10%
 
 Inc + Mul: {$inc: {$mul: 1.1}} --> se o valor for 100, retorna 210
 -------------------------------------------------------------------
@@ -206,28 +211,13 @@ $each [Modificador]:
 
 $position:
 Adiciona em uma posição específica 
-- Syntax: {
-  $push: {
-    <campo>: {
-       $each: [ <valor1>, <valor2>, ... ],
-       $position: <num>
-    }
-  }
-}
+- Syntax: 
 - Query: db.lista.updateOne({_id:1}, {$push:{vetor_num:{$each:[10,3], $position:0}}})
-
 
 $slice:
 Limita a quantidade de elementos
 Final para o começo (últimos itens do array): número negativo -5
-- Syntax:  {
-  $push: {
-     <campo>: {
-       $each: [ <valor1>, <valor2>, ... ],
-       $slice: <num>
-     }
-  }
-}
+- Syntax: 
 - Query: db.lista.updateOne({_id:1}, {$push:{vetor_num:{$each:[100,200], $slice: -5}}})
 - Query: db.lista.updateOne({_id:1}, {$push:{vetor_nome:{$each: [], $slice: 3}}}) [deixar os 3 primeiros]
 Colocar no meio de uma array com position: (tamanho da array / 2) + 1
