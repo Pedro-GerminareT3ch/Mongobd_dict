@@ -1,10 +1,10 @@
 Local para rodar o código
-C:\Program Files\MongoDB\Server\8.0\bin
-mongod.exe
+>> C:\Program Files\MongoDB\Server\8.0\bin
+:> mongod.exe
 
 depois:
-C:\mongo\mongosh-2.3.8-win32-x64\bin
-mongosh.exe
+>> C:\mongo\mongosh-2.3.8-win32-x64\bin
+:> mongosh.exe
 
 ctrl + C --> Fechar o servidor
 sair do mongo no cmd --> exit()
@@ -162,7 +162,9 @@ Inc + Mul: {$inc: {$mul: 1.1}} --> se o valor for 100, retorna 210
 -------------------------------------------------------------------
 
 $min e $max: Só atualiza se o valor for menor(min), ou maior(max) que o valor especificado
-- Syntax: 
+ESTOQUE: min = min: max = max
+$max: aumenta se o valor for menor |  $min: Diminui se o valor for maior
+- Syntax: ($min/$max: {<campo>: valor})
 - Query: db.clientes.updateOne({nome: "Iago"}, {$min: {saldo:101}})
 - Query: db.clientes.updateOne({nome: "Iago"}, {$max: {saldo:100}})
 
@@ -247,3 +249,36 @@ Saída ordenada
 - db.clientes.find({}, {_id:0, nome:1, sobrenome:1, data_abertura:1}).sort({data_abertura:1}) 
 
 db.clientes.updateMany({emprestimo_tipo: {$exists: true}}, {$push: {emprestimo_tipo: {$each: [], $sort: 1} }})
+
+
+I M P O R T A Ç Ã O 
+-------------------
+- Formatações válidas: csv, json, tsv.
+Na pasta: 
+
+>> C:\mongo\mongosh-2.3.8-win32-x64\bin\tools
+Dar o comando: 
+:> mongoimport.exe --db=techBank --collection=Contas --type=csv --headerline --file="caminho\Contas.csv"
+
+Quando for um arquivo .json, não precisa do type:
+:> mongoimport.exe --db=techBank --collection=Clientes --file="caminho\Clientes.json" --jsonArray
+
+Renomear Collection
+- Query: db.Clientes.renameCollection("clientes")
+
+.limit()
+- Systax: db.collection.find(<query>).limit(<number>)
+- Query: db.clientes.find({}, {nome:1, _id:0}).sort({data_nascimento:1}).limit(1)
+
+$all: É tipo o $and
+- Syntax: { <campo>: { $all: [ <valor1> , <valor2> ... ] } }
+- Query: db.clientes.find({seguros:{$all:["seguro de vida","seguro para carro"]}}).count()
+
+.distinct: 
+Procurar valores distintos para um único campo
+- Query: db.contas.distinct("tipo")
+- Query: db.enderecos.distinct("estado")
+
+.length:
+É usado para valores dentro de uma array
+- Query: db.clientes.distinct("status_civil").length
