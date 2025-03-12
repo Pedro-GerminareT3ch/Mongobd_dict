@@ -13,13 +13,12 @@ table -> collections
 rows -> documents (BSON)
 columns -> fields (campos)
 
-https://www.mongodb.com/pt-br/docs/manual/reference/operator/query/
-
-
 C O M A N D O S    I N I C I A I S:
 -----------------------------------
 show dbs: mostra todos os bancos que você tem
 show collections --> Mostrar todas as colections do banco
+
+db.enderecos.countDocuments() --> Conta os documentos de uma collection
 
 use "alunos": cria um novo database / ou usar um existente
 
@@ -278,7 +277,41 @@ $all: É tipo o $and
 Procurar valores distintos para um único campo
 - Query: db.contas.distinct("tipo")
 - Query: db.enderecos.distinct("estado")
+- Query: db.clientes.distinct("profissao", {profissao: {$regex: /^v/i}})
 
 .length:
 É usado para valores dentro de uma array
 - Query: db.clientes.distinct("status_civil").length
+----------------------------------------------------
+
+Framework: programa + algumas função da linguagem, reduz sobrecarga de rede
+Biblioteca: Só o programa, você o usa mudando alguns parâmetros
+
+Aggregate Framework: + de 1 consulta, updates, qualquer coisa mais avançada (pipelines baseado em estágios)
+Find: procura Documentos
+Aggregate: faz mudança com retorno
+
+
+$sum
+- Syntax: { $sum: <expressão> }
+- Query: <Null>
+
+$group:
+- Syntax: { $group: {
+  _id: <expressão>, // Group key
+   <campo1>: { <accumulador> : <expressão> },
+}}
+- Query: db.clientes.aggregate({$group: {_id: "$status_civil", "Quantidade": {$count:{}}}}) --> pega os únicos de cada estado civil e depois conta cada um deles
+- Query: db.contas.aggregate([
+   {$group: {_id: "$tipo", "Total em dinheiro": {$sum: "$valor"}}},
+   { $sort: { "Total em dinheiro":1 }}
+]) --> Colocar colchetes, soma os saldos por tipo de contas
+- Query: db.contas.aggregate([{ $group: { _id: "$agencia", "qnt": { $count:{} } } }, { $sort: { "qnt": -1 } }] )
+
+$match:
+- Syntax
+- Query: db.contas.aggregate([
+    {$match:{valor: {$gt:8500}}},
+    {$group:{_id:"$tipo", "Quantidade": {$count:{}}}}
+]) --> pegua 1° os docs em que os valores são > que 8500 e depois contas ele por 'distinct'
+
