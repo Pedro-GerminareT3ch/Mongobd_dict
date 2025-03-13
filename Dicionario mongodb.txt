@@ -249,7 +249,6 @@ Saída ordenada
 
 db.clientes.updateMany({emprestimo_tipo: {$exists: true}}, {$push: {emprestimo_tipo: {$each: [], $sort: 1} }})
 
-
 I M P O R T A Ç Ã O 
 -------------------
 - Formatações válidas: csv, json, tsv.
@@ -291,7 +290,6 @@ Aggregate Framework: + de 1 consulta, updates, qualquer coisa mais avançada (pi
 Find: procura Documentos
 Aggregate: faz mudança com retorno
 
-
 $sum
 - Syntax: { $sum: <expressão> }
 - Query: <Null>
@@ -314,4 +312,47 @@ $match:
     {$match:{valor: {$gt:8500}}},
     {$group:{_id:"$tipo", "Quantidade": {$count:{}}}}
 ]) --> pegua 1° os docs em que os valores são > que 8500 e depois contas ele por 'distinct'
+
+db.contas.aggregate([{ $match: { agencia: 1545 } }, { $group: { _id: "$tipo", "Dinheiro": { $sum: "$valor" } } }, { $sort: { "Dinheiro": -1 } }] )
+
+$limit:
+-- Limita a quantidade de retornos na query
+- Syntax: 
+- Query: db.clientes.aggregate([{$sort: {data_nascimento:1}}, {$limit:1}])
+
+
+$sortByCount:
+- Syntax: 
+- Query sem: db.clientes.aggregate([{$group: {_id:"$genero", "qnt": {$count:{}}}}, {$sort: {_id:1}}])
+- Query: db.clientes.aggregate([{$sortByCount: "$genero"}])
+
+
+$unwind:
+Descontroi um campo de matriz dos documentos para
+- Syntax: 
+- Query: db.clientes.aggregate([{$unwind: "$seguros"}, {$sortByCount: "$genero"}])
+
+
+
+
+
+DESAFIOS:
+
+QNT AGENCIAS NO BANCO?
+db.contas.aggregate({$group: {_id: "$agencia"}} ,{$count: "qnt" })
+
+QUAL AGENCIA TEM MAIS CONTA?
+
+AGENCIA COM 5 > SALDOS?
+db.contas.aggregate([ { $group: { _id: "$agencia", "Total": { $sum: "$valor" } } }, { $sort: { "Total": -1 } }, { $limit: 5 }] )
+
+QUANTOS CLIENTES TEM MAIS DE UM ENDEREÇO CADASTRADO?
+ db.enderecos.aggregate({$group: {_id: "$id_cliente", "qnd": {$count:{}}}})  
+
+RANKING DOS 10 primeiros QUE MAIS TEM ENDEREÇO CADASTRADOS
+ db.enderecos.aggregate({$sortByCount:"$estado"}, {$limit: 10})
+
+
+Quantos clientes são do sudeste e quanto % do total de clientes?
+
 
