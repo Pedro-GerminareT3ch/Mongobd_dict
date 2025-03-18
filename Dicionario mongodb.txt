@@ -306,38 +306,42 @@ $group:
 ]) --> Colocar colchetes, soma os saldos por tipo de contas
 - Query: db.contas.aggregate([{ $group: { _id: "$agencia", "qnt": { $count:{} } } }, { $sort: { "qnt": -1 } }] )
 
+
+
 $match:
 - Syntax
 - Query: db.contas.aggregate([
     {$match:{valor: {$gt:8500}}},
     {$group:{_id:"$tipo", "Quantidade": {$count:{}}}}
 ]) --> pegua 1° os docs em que os valores são > que 8500 e depois contas ele por 'distinct'
-
-db.contas.aggregate([{ $match: { agencia: 1545 } }, { $group: { _id: "$tipo", "Dinheiro": { $sum: "$valor" } } }, { $sort: { "Dinheiro": -1 } }] )
+- Query: db.contas.aggregate([{ $match: { agencia: 1545 } }, { $group: { _id: "$tipo", "Dinheiro": { $sum: "$valor" } } }, { $sort: { "Dinheiro": -1 } }] )
 
 $limit:
 -- Limita a quantidade de retornos na query
-- Syntax: 
+- Syntax: db.article.aggregate([
+   { $limit : 5 }
+]);
 - Query: db.clientes.aggregate([{$sort: {data_nascimento:1}}, {$limit:1}])
 
 
 $sortByCount:
-- Syntax: 
+- Syntax: { $sortByCount:  <expression> }
 - Query sem: db.clientes.aggregate([{$group: {_id:"$genero", "qnt": {$count:{}}}}, {$sort: {_id:1}}])
 - Query: db.clientes.aggregate([{$sortByCount: "$genero"}])
 
 
 $unwind:
 Descontroi um campo de matriz dos documentos para
-- Syntax: 
+- Syntax:  { $unwind: <campo path> }
 - Query: db.clientes.aggregate([{$unwind: "$seguros"}, {$sortByCount: "$genero"}])
 
+
+$firt: (OPERADOR DO $GROUP)
 
 
 
 
 DESAFIOS:
-
 QNT AGENCIAS NO BANCO?
 db.contas.aggregate({$group: {_id: "$agencia"}} ,{$count: "qnt" })
 
@@ -351,8 +355,5 @@ QUANTOS CLIENTES TEM MAIS DE UM ENDEREÇO CADASTRADO?
 
 RANKING DOS 10 primeiros QUE MAIS TEM ENDEREÇO CADASTRADOS
  db.enderecos.aggregate({$sortByCount:"$estado"}, {$limit: 10})
-
-
-Quantos clientes são do sudeste e quanto % do total de clientes?
-
+----------------------------------------------------------------------
 
