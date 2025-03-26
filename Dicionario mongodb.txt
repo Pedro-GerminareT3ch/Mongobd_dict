@@ -94,7 +94,7 @@ typeof: Descobrir o tipo de um campo
 
 $regex 😎: 
 - Syntax: { $regex: /padrão/ }
-- Query: db.alunos.find({disciplinas:{$regex: /Desenvolvimento/}})
+- Query: db.alunos.find({disciplinas:{$regex: /Desenvolvimento/i}})
 --------------------------------------
 SELETORES DE QUERY:
 $eq : == | Igual
@@ -193,7 +193,7 @@ $push: Adiciona um valor na array sem se importar com duplicatas
 - Syntax:{ $push: { <campo1>: <valor1>, ... } }
 - Query: db.clientes.updateOne({nome:"Jucelio"}, {$push: {emprestimo_tipo: 'Pessoal'}})
 
-$addToSet: Adiciona um valor numa array e garantir que o valor seja único
+$addToSet: Adiciona um valor numa array e garantir que o valor seja único, (não adiciona se já existir)
 - Syntax: { $addToSet: { <campo1>: <valor1>, ... } }
 - Query: db.clientes.updateOne({nome:"Jucelio"}, {$addToSet: {emprestimo_tipo: 'FGTS'}})
 
@@ -307,7 +307,6 @@ $group:
 - Query: db.contas.aggregate([{ $group: { _id: "$agencia", "qnt": { $count:{} } } }, { $sort: { "qnt": -1 } }] )
 
 
-
 $match:
 - Syntax
 - Query: db.contas.aggregate([
@@ -337,8 +336,8 @@ Descontroi um campo de matriz dos documentos para
 
 
 $firt: (OPERADOR DO $GROUP)
-
-
+- Syntax: 
+- Quet: <null>
 
 
 DESAFIOS:
@@ -357,3 +356,59 @@ RANKING DOS 10 primeiros QUE MAIS TEM ENDEREÇO CADASTRADOS
  db.enderecos.aggregate({$sortByCount:"$estado"}, {$limit: 10})
 ----------------------------------------------------------------------
 
+$lookup:
+--- EXPLICAÇÃO
+IMAGEM: https://miro.medium.com/v2/resize:fit:1400/1*nkturuH9V8Pv3XJZXDgfzg.png
+-- Busca em duas tabelas e junta onde os valores são EXATAMENTE IGUAIS, cria um array com os documentos com os valores correspondentes
+from: collection que vai buscar
+localField: campo da collection que usa o aggregate
+foreignField: campo que vai buscar o mesmo valor,
+as: alias para usar em outros estágios ou na saída
+----
+- Query: db.clientes.aggregate([
+  { $lookup: {
+    from: "contas",
+    localField: "_id",
+    foreignField: "id_cliente",
+    as: "clientesContas"
+    }
+  } 
+])
+- Query: db.clientes.aggregate([ {$match: {_id:30} }, 
+{ $lookup: { from: "contas", localField: "_id", foreignField: "id_cliente", as: "clientesContas" } }])
+
+
+$addFields: 
+-- Pode ser usado para adiciona um campo de baseado no retorno de $lookup
+A ordem em que ele é colocado na query afeta a saída
+- Query:  db.clientes.aggregate([ 
+  {$match: {_id:30} }, 
+  {$lookup: { from: "contas", localField: "_id", foreignField: "id_cliente", 
+   as: "clientesContas" }}, 
+{$addFields: {numero_de_contas: {$size: "$clientesContas"}} }])
+
+
+
+
+$project:
+-- É Basicamente a formatação do aggregate
+- Syntax: { $project: { <especificação(s)> } }
+- Query: db.clientes.aggregate([ 
+  {$match: {_id:30} }, 
+  {$lookup: { 
+   from: "contas", localField: "_id", foreignField: "id_cliente", 
+   as: "clientesContas" }
+  }, 
+  {$addFields: {numero_de_contas: {$size: "$clientesContas"}}},
+  {$project:  {_id:0, clientesContas:0 } }
+])
+- Query: db.clientes.aggregate([
+{$lookup:{ 
+ from: "enderecos", localField: "_id", foreignField: "id_cliente", as: "endereco" 
+}}, 
+{$addFields: {"endereços": {$size: "$endereco"}}},
+{$sort:{"endereços":-1, "data_nascimento":1}},
+{$limit:4},
+{$project: {
+    _id:0, nome:1, data_nascimento:1, "endereco.cidade":1, "endereco.estado":1 
+}}])  --> Pegar a informação de endereço dos 4 mais velhos
