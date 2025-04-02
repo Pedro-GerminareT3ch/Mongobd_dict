@@ -1,0 +1,22 @@
+| Tipo                | Número | Alias           | Notas      |
+|---------------------|--------|-----------------|------------|
+| Double              | 1      | "double"        |            |
+| String              | 2      | "string"        |            |
+| Objeto              | 3      | "objeto"        |            |
+| Array               | 4      | "array"         |            |
+| Dados binários      | 5      | "binData"       |            |
+| Indefinido          | 6      | "indefinido"    | Obsoleto.  |
+| ObjectId            | 7      | "objectId"      |            |
+| Boolean             | 8      | "bool"          |            |
+| Data                | 9      | "data"          |            |
+| Zero                | 10     | "nulo"          |            |
+| Expressão regular   | 11     | "regex"         |            |
+| DBPointer           | 12     | "dbPointer"     | Obsoleto.  |
+| JavaScript          | 13     | "javascript"    |            |
+| Símbolo             | 14     | "símbolo"       | Obsoleto.  |
+| Inteiro de bits     | 16     | "int"           |            |
+| Timestamp           | 17     | "carimbo de data/hora"|      |
+| Inteiro de 64 bits  | 18     | "long"          |            |
+| Decimal128          | 19     | "decimal"       |            |
+| Min key             | -1     | "minKey"        |            |
+| Tecla máxima        | 127    | "maxKey"        |            |

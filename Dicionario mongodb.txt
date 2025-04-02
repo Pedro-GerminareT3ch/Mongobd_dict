@@ -363,7 +363,9 @@ IMAGEM: https://miro.medium.com/v2/resize:fit:1400/1*nkturuH9V8Pv3XJZXDgfzg.png
 from: collection que vai buscar
 localField: campo da collection que usa o aggregate
 foreignField: campo que vai buscar o mesmo valor,
-as: alias para usar em outros estágios ou na saída
+as: alias para usar em outros estágios ou na saída,
+pipeline: filtro netro do lookup, quando for usado o $match, usar com $ne[]
+{$match: {contas_correntes: {$ne: []}}}
 ----
 - Query: db.clientes.aggregate([
   { $lookup: {
@@ -391,7 +393,7 @@ A ordem em que ele é colocado na query afeta a saída
 
 
 $project:
--- É Basicamente a formatação do aggregate
+-- É Basicamente a formatação do aggregate | projeta como os campos serão retornados
 - Syntax: { $project: { <especificação(s)> } }
 - Query: db.clientes.aggregate([ 
   {$match: {_id:30} }, 
