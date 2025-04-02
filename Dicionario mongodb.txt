@@ -295,7 +295,7 @@ $sum
 - Query: <Null>
 
 $group:
-- Syntax: { $group: {
+- Syntax: { $group: {f
   _id: <expressão>, // Group key
    <campo1>: { <accumulador> : <expressão> },
 }}
@@ -412,3 +412,55 @@ $project:
 {$project: {
     _id:0, nome:1, data_nascimento:1, "endereco.cidade":1, "endereco.estado":1 
 }}])  --> Pegar a informação de endereço dos 4 mais velhos
+
+
+F U N Ç Õ E S   N O   M O N G O D B 
+--------------------------------------
+
+$rand : Cria um número aleatório qubrado do tipo float entre 0 e 1
+- Syntax: { $rand: {} }
+- Query:  db.clientes.aggregate({$project: {_id:0, aleatorio: {$rand: {}} }})
+
+
+$round: Arredonda pro inteiro próximo ou anterior
+- Syntax: {$round: [<campo>, <numero de casas decimais>]}
+- Query: db.contas.aggregate(
+   {$match: {valor: {$type: "double"} }}, 
+   {$sort: {"valor":-1 } }, 
+   {$limit:3},
+   { $lookup: {
+    from: "clientes",
+    localField: "id_cliente",
+    foreignField: "_id",
+    as: "nomeCliente" }
+  },
+  {$project: {_id:0, "nome": "$nomeCliente.nome", "Saldo": {$round: ["$valor", 1]}} } 
+)
+
+
+$trunc: Só tira as casas decimais
+- Syntax: 
+- Query: 
+
+$divide:
+- Syntax:
+- Query: 
+
+
+
+$multiply: 
+- Syntax 
+- Query: db.contas.aggregate( 
+ {$match: {valor: {$type: "double"}}},
+ {$sort:  {"valor": 1 }},
+ {$limit: 3},
+ {$lookup: {from: "clientes", localField: "id_cliente", 
+  foreignField: "_id", as: "nomeCliente"}},
+ {$project: 
+ {_id: 0, "nome":"$nomeCliente.nome", 
+ "valor_bonus": {$round:[{$multiply: ["$valor", 1.1]},2 ]}
+}})
+
+
+
+
