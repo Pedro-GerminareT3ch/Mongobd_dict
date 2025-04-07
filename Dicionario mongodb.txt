@@ -441,17 +441,16 @@ $round: Arredonda pro inteiro próximo ou anterior
 
 
 $trunc: Só tira as casas decimais
-- Syntax: 
+- Syntax: { $trunc : [ <numero>, <casas> ] 
 - Query: 
 
 $divide:
-- Syntax:
+- Syntax: { $divide: [ <expression1>, <expression2> ] }
 - Query: 
 
 
-
-$multiply: 
-- Syntax 
+$multiply:  
+- Syntax: { $multiply: [ <expression1>, <expression2>, ... ] 
 - Query: db.contas.aggregate( 
  {$match: {valor: {$type: "double"}}},
  {$sort:  {"valor": 1 }},
@@ -462,6 +461,56 @@ $multiply:
  {_id: 0, "nome":"$nomeCliente.nome", 
  "valor_bonus": {$round:[{$multiply: ["$valor", 1.1]},2 ]}
 }})
+
+
+$concat: Junta as strings
+- Syntax: { $concat: [ <expression1>, <expression2>, ... ] }
+- Query: db.clientes.aggregate([
+ { $project: {_id:0,
+   nome_cpf: {$concat: ["$nome", " - ", "$cpf"]
+  } } }
+])
+
+
+$split: Separa as strings em um array por meio de um separador
+- Syntax: { $split: [ <string expression>, <delimiter> ] }
+- Query: db.clientes.aggregate([
+  {$project: {nome: {$split: ["$nome", " "]}}}
+])
+
+
+$arrayElemAt: pega o elemento específico de uma array
+- Syntax: { $arrayElemAt: [ <array>, <idx> ] }
+- Query: db.clientes.aggregate([
+{$project: {_id:0,
+  nome_resumo: {$concat: [ 
+  {$arrayElemAt:[{$split: ["$nome", " "]},1]},
+  " ",
+  {$arrayElemAt:[{$split: ["$nome", " "]},0]}
+]
+}
+}}
+])
+
+
+$toLower e $toUpper
+- Syntax: { $toLower: <expression> }
+- Query: db.clientes.aggregate([
+ {$project: 
+  {_id:0, 
+  email: {
+    $concat: [
+  {$arrayElemAt:[{$split: [ {$toLower:"$nome"} , " "]},0]}, ".",
+  {$arrayElemAt:[{$split: [ {$toLower:"$nome"} , " "]},-1]},
+  "@tech.com"
+]}}}])
+ 
+
+
+
+
+
+
 
 
 
