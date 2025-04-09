@@ -446,7 +446,20 @@ $trunc: Só tira as casas decimais
 
 $divide:
 - Syntax: { $divide: [ <expression1>, <expression2> ] }
-- Query: 
+- Query: db.clientes.aggregate([
+   {$lookup: {from:"enderecos", localField: "_id", foreignField: "id_cliente", as: "endereco" } },
+   {$match: {"endereco.estado":"ES"}},
+   {$lookup: {from:"contas", localField: "_id", foreignField: "id_cliente", as: "contas_C" }},
+   {$unwind: "$contas_C" },
+   {$match: {"contas_C.valor": {$type:1}}},
+   {$project: {
+      _id:0, 
+      nome:1, 
+      Cidade: "$endereco.cidade", 
+      Estado: "$endereco.estado" ,
+      Saldo: "$contas_C.valor", 
+      Saldo_metade: {$divide: ["$contas_C.valor", 2]} }}
+])
 
 
 $multiply:  
