@@ -103,8 +103,10 @@ $gte: >= | Maior igual
 $lt : <  | Menor
 $lte: <= | Menor igual
 
-Syntax: { <campo>: { $eq: <valor> } }
-Query: db.alunos.find({media:{$lt:7}}) 
+- Syntax: { <campo>: { $eq: <valor> } } --> É usado desse forma quando é para retornar um operador:
+- Query: db.alunos.find({media:{$lt:7}}) 
+Quando é usado no COND: 
+{$gt: ["$valor",9500 ]}
 --------------------------------------
 ======================================
 OS CAMPOS PROCURADOS DEVEM EXISTIR EM TODOS OS DOCUMENTOS PARA FUNCIONAR
@@ -442,7 +444,29 @@ $round: Arredonda pro inteiro próximo ou anterior
 
 $trunc: Só tira as casas decimais
 - Syntax: { $trunc : [ <numero>, <casas> ] 
-- Query: 
+- Query: db.contas.aggregate([
+  { $match: { valor: { $type: 1 } } },
+  { $facet: {
+      media: [{ $group: { _id: null, media: { $avg: "$valor" } } }],
+      dados: [{ $project: { valor: 1 } }]
+  }},
+  { $project: {
+      media: { $arrayElemAt: ["$media.media", 0] },
+      dados: 1
+  }},
+  { $unwind: "$dados" },
+  { $project: {
+      media: 1,
+      acima: { $cond: [{ $gt: ["$dados.valor", "$media"] }, 1, 0] },
+      abaixo: { $cond: [{ $lt: ["$dados.valor", "$media"] }, 1, 0] }
+  }},
+  { $group: {
+      _id: {$trunc: ["$media", 2]},
+      acima_da_media: { $sum: "$acima" },
+      abaixo_da_media: { $sum: "$abaixo" }
+  }}
+])
+
 
 $divide:
 - Syntax: { $divide: [ <expression1>, <expression2> ] }
@@ -517,8 +541,229 @@ $toLower e $toUpper
   {$arrayElemAt:[{$split: [ {$toLower:"$nome"} , " "]},-1]},
   "@tech.com"
 ]}}}])
- 
 
+
+ 
+$toString:
+- Syntax: { $toString: <expression> }
+- Query: db.clientes.aggregate([
+  { $lookup: { from: "contas", localField: "_id", foreignField: "id_cliente", as: "contas" } },
+  { $lookup: { from: "enderecos", localField: "_id", foreignField: "id_cliente", as: "endereco" } },
+  { $unwind: "$contas" },
+  { $unwind: "$endereco" },
+  {
+    $project: {
+      _id: 0,
+      Cliente: "$nome",
+      Info_conta: {
+        $concat: [
+        "Conta: ", "$contas.tipo", " - Agência: ", { $toString: "$contas.agencia" }
+        ]
+      },
+      Endereco: {
+        $concat: [
+          "Rua: ", "$endereco.rua", " - ", "$endereco.bairro", " - ",
+          "$endereco.cidade", "/", "$endereco.estado", " - ", "$endereco.cep"
+        ]
+      }
+    }
+  }
+])
+
+
+
+D A T A   E   C O N D I C I O N A I S
+-------------------------------------
+Formatos de datas: ISO DATE() ou new Date
+
+$year, $day, $month
+- Passe uma data que eles retornam os ocrrespondentes
+db.clientes.aggregate([{$project: {"ano": {$year: "$data_nascimento"}}}])
+
+
+new Date().getFullYear(): Usar com a data de hj
+db.clientes.aggregate([
+  {$project:  {"ano": {$year: "$data_nascimento"}}},
+  {$match: {ano: {$lte: new Date().getFullYear() - 30 }}},
+  {$count: "acima30Anos"}
+]) :: Extrai o campo ano, verifica se é menor do que 30 anos atrás, ou seja conta as pessoas com mais de 30 anos
+
+
+
+$date Diff: Pegar a diferença de períodos
+Entrega de produtos: dias | Idade: Anos
+- Syntax:  {
+   $dateDiff: {
+      startDate: <data de inicio>,
+      endDate: <data final>,
+      unit: <unidade de tempo>,
+      timezone: <fuso horário opcional>,
+ startOfWeek: <dia de início da semana (opcional, apenas para unidade 'week')>
+}}
+
+- Query: db.clientes.aggregate([
+  { $project: { idade: {$toInt: {
+        $dateDiff: {
+          startDate: "$data_nascimento",
+          endDate: "$$NOW",
+          unit: "year"
+   }}}}}
+])
+
+
+$$NOW
+-- Pega a data do computador de um fuso horário diferente
+db.clientes.aggregate([
+  { $project: { data: "$$NOW"
+   }}
+])
+
+Formatação de datas:
+$dateToString:
+- Syntax:
+- Query: db.clientes.aggregate([
+  { $project: { agora_br: {
+        $dateToString: {
+          date: "$$NOW",
+          format: "%Y-%m-%d %H:%M:%S",
+          timezone: "America/Sao_Paulo"
+   }}}}
+])
+
+$toInt: Transforma para inteiro
+- Syntax: {$toInt: <Valor> }
+
+
+:: Pegar só o pessoal que nasceu em janeiro:
+db.clientes.aggregate([
+  {$project:  {"mês": 
+   {$month: "$data_nascimento"}, nome:1}},
+{$match: {"mês": {$eq:1}}}
+])
+
+ou
+
+{$match: {$expr: {$eq: [{$month: "$data_nascimento"}, 1]}}}
+
+$set NO AGGREGATE == $addFields
+- O $set vai apenas atualizar um campo mas não faz a restrição de xibir apenas ele, que é o que o padrão do project faz. Caso não exista o campo ele cria um novo.
+EXEMPLO:
+db.clientes.aggregate([
+  { $set: { mês: { $month: "$data_nascimento" } } },
+  { $match: { mês: 1 } },
+  { $project: {nome:1, mês: 1}}
+])
+
+
+-------------------------
+saldo antigo e saldo atualizado -200 com pessoal < 20 anos do valor total
+
+db.clientes.aggregate([
+  { $set: { idade: {$toInt: {
+        $dateDiff: {
+          startDate: "$data_nascimento",
+          endDate: "$$NOW",
+          unit: "year"
+   }}}}},
+   {$lookup: {from:"contas", localField: "_id", foreignField: "id_cliente", as: "contas",
+   pipeline: [
+ 	{$match: {valor: {$gt:0}}},
+	{$group: {_id: null, saldo_total: {$sum: "$valor"}}}
+      ]
+ }},
+{$unwind: "$contas"},
+{$match: {contas: {$ne: []}} },
+{$match: {"idade": {$lt:20} }},
+{$project: {
+ _id:0, nome:1, idade:1,
+ Saldo_anterior: "$contas.saldo_total",
+ Saldo_atualizado: { $subtract: ["$contas.saldo_total", 200] } }
+  }
+])
+
+$cond: - Como ele FUNCIONA
+- Syntax: {campo: {$cond: [{teste lógico}, True, False]}}
+- Syntax: { $cond: {if: {teste lógico},
+    then: true,
+    else: false}}
+- Query: db.contas.aggregate([
+  { $set: { status: { $cond: [ {$gt: ["$valor",9500 ]} , "Acima de R$9500" ,  "Abaixo de R$9500"] } } }
+]) 
+- Query: db.contas.aggregate([
+  { $project: { _id: 0,status: { $cond: 
+    {if: {$gt: ["$valor",9500 ]},
+    then: "Acima de R$9500",
+    else: "Abaixo de R$9500"}} , valor:1, cpf:1,  } }
+]) 
+
+
+$ifNull :
+- Syntax: { $ifNull : ["campo", "o que ocorre se ele não existir"]}
+- O null é diferente de uma string vazia
+- Query: db.clientes.aggregate([
+  {$set:{
+    tem_dependentes: {
+      $cond: [ 
+        {$gt:[{$size: {$ifNull: ["$dependentes", []]}},0]} 
+        ,true
+        ,false]}
+  }}
+])
+
+$switch:
+- Syntax: $switch: {
+   branches: [
+      { case: <expression>, then: <expression> },
+      { case: <expression>, then: <expression> }, ...
+   ],
+   default: <expression>
+}
+- Query: db.contas.aggregate([
+  {$project: {
+    valor:1,
+    condicao: {
+      $switch: {
+        branches: [
+           { case: {$lte: ["$valor", 3000]}, then: "Valor abaixo do esperado" },
+           { case: {$and: [{$gt:["$valor", 3000]}, {$lte: ["$valor", 6000]}]}, then: "Valor na média" }
+        ],
+        default: "Valor acima da média"
+     }
+    }
+  }}
+])
+
+
+
+$facet: Cria campos que são aggregates:
+- Syntax: {$facet: {
+ campo1: [{ <expression1> }, {expression2}]
+ campo2: [{ <expression1> }, {expression2}]
+}}
+
+- Query: db.contas.aggregate([
+  { $match: { valor: { $type: 1 } } },
+  { $facet: {
+      media: [{ $group: { _id: null, media: { $avg: "$valor" } } }],
+      dados: [{ $project: { valor: 1 } }]
+  }},
+  { $project: {
+      media: { $arrayElemAt: ["$media.media", 0] },
+      dados: 1
+  }},
+  { $unwind: "$dados" },
+  { $project: {
+      media: 1,
+      acima: { $cond: [{ $gt: ["$dados.valor", "$media"] }, 1, 0] },
+      abaixo: { $cond: [{ $lt: ["$dados.valor", "$media"] }, 1, 0] }
+  }},
+  { $group: {
+      _id: null,
+      media: { $first: "$media" },
+      acima_da_media: { $sum: "$acima" },
+      abaixo_da_media: { $sum: "$abaixo" }
+  }}
+])
 
 
 
