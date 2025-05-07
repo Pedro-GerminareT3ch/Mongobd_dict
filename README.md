@@ -7,6 +7,7 @@ matéria Banco de Dados II (Mongodb)<br>
 Fontes de informações do dicionário  
 Operadores: https://www.mongodb.com/pt-br/docs/manual/reference/operator/query/<br>
 Update: https://www.mongodb.com/pt-br/docs/manual/reference/operator/update/
+Métodos: https://www.mongodb.com/pt-br/docs/manual/reference/method/
 
 # Código do programa python:
 ```
