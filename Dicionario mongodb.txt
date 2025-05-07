@@ -767,7 +767,63 @@ $facet: Cria campos que são aggregates:
 
 
 
+-------------------------------------------------------
+UPDATE COM AGGREGATE()
 
+$merge: Update com aggragate(), é sempre o último estágio 
+- Syntax: 
+{ $merge: 
+    { into: collectioin que vai receber os dados, 
+      whenMatched: option, 
+      whenNotMatched: option } 
+}
+A busca é pelo _id
+whenMatched:
+• replace: substitui o documento de acordo com o retorno do aggregate;
+• keepExisting: mantem apenas o documento original;
+• merge: adiciona os novos campo (ou novos valores), mas mantem os demais campos;
+• fail: Lança um erro se o documento existir
+
+whenNotMatche:
+• insert: cria um novo documento;
+• discard: ignora o documento (não insere nada)
+• fail: Lança um erro e interrompe a execução
+
+- Query: db.clientes.aggregate([
+  {$addFields: {
+    idade: {$toInt: {
+      $dateDiff: {
+	startDate: "$data_nascimento",
+	endDate: "$$NOW",
+	unit: "year"
+      }
+    }}	
+  }},
+  {$merge: {
+    into: "clientes",
+    whenMatched: "merge",
+    whenNotMatched: "discard"
+}}
+])
+
+
+.forEach():
+- Syntax: db.collection.find().forEach( <function> )
+- Query: db.clientes.aggregate([
+   {$lookup: {from:"enderecos", localField: "_id", foreignField: "id_cliente", as: "enderecos", pipeline:[{$match: {estado:"ES"}}]
+ } },
+   {$match: {enderecos:{$ne:[]}}},
+   {$lookup: {from:"contas", localField: "_id", foreignField: "id_cliente", as: "contas", pipeline:[{$match: {tipo: /corrente/i }}] }},
+   {$unwind: "$contas"},
+   {$set: {saldo: {$divide: ["$contas.valor", 2]} }}
+]).forEach(
+   function(doc){
+     db.contas.updateMany(
+       {_id: doc.contas._id},
+       {$set: {valor: doc.saldo}}
+  )
+ }
+)
 
 
 
