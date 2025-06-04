@@ -1,0 +1,240 @@
+
+REDIS
+Principal característica: Desempenho
+
+ENTRAR: No redis
+docker run --name redis -d -p 6379:6379 redis:latest
+
+docker exec -it redis bash
+# redis-cli
+>> Diretamente: docker exec -it redis redis-cli
+
+
+Procurar Comandos: 
+https://redis.io/docs/latest/commands/
+https://redis.io/pt/redis-enterprise/estruturas-de-dados/ (Estruturas de Dados que o Redis suporta)
+
+
+OS COMANDOS SEMPRE EM MAIÚSCULO 
+
+>> Ver todas as chave existentes (o recomendado é o SCAN)
+KEYS *
+
+>> Quantas chaves o Banco tem
+DBSIZE
+
+======================================================================
+
+>> Declarar Variáveis - O automático é string (CONSEGUE SOBREESCREVER QUALQUER TIPO)
+SET "chave" valor
+
+[EX] -> definir quanto tempo ela vai existir
+SET tempo "10 segundos" EX 10
+[NX] -> Cria a chave apenas se ela não existir
+
+[XX] -> Altera a chave, apenas se ela existir
+
+
+>> Comando para verificar se uma chave existe (0 e 1)
+EXISTS user:123:nome
+
+>> SETEX (muda a sintaxe e vai ser substituído - não usar)
+SETEX minha_chave 60 "valor"
+
+>> Ver o tempo a chave ainda tem
+TTL tempo
+-2: Chave inexistente
+-1: Sem tempo de expiração (mas existente)
+
+>> Ver valor das variáveis (print)
+GET "Chave" 
+
+>> Apagar todas as chaves no banco
+FLUSHALL 
+
+>> Dar valores a usuários: [Usuário]::[Atributo] [Valor]
+SET user:987:nome "Pedro Ivo"
+
+
+>> Remover chaves do banco de dados (UNLINK e DEL)
+DEL chave1 chave2 -- (Trava o servidor todo até terminar de rodar)
+UNLINK chave1 chave2 -- (Vai deletando e permite outras operações enquanto isso)
+
+>> Renomear uma chave
+RENAME chave "name"
+
+>> Vários sets de uma vez só
+- Sintaxe: MSET chave1 "valor1" chave2 "valor2" chave3 "valor3"
+MSET resultado:20-05-25:quina "15, 18, 25, 28, 32" resultado:19-05-25:QUINA "5, 8, 16, 38, 55" resultado:15-05-25:QUINA "15, 17, 23, 33, 40"
+
+>> Vários gets de uma vez só -- Mostra (nil) se a chave não existir
+- Sintaxe: MGET chave1 "valor1" chave2 "valor2"
+MGET resultado:15-05-25:quina resultado:20-05-25:quina
+
+>> Cria e mostra o valor que acabou de ser criado
+GETSET chave1 valor1
+
+>> Mostrar com o KEYS variáveis cujo os nomes se parecem (tipo regex) 
+Operações de "Regex" no KEYS
+   ? - Substitui qualquer informação naquela posição
+   * - Substitui qualquer informação depois ou antes de algo
+   [] - lista de caracteres, é no conteúdo de ou
+   ^e - negação da letra e
+   \ é o escape
+
+:: Do mês de maio
+KEYS resultado:*-05-*
+
+:: Entre os dias 10 e 19
+KEYS *1[0-9]-*
+KEYS *1?-*
+
+
+_____________________________________
+DAR OS COMANDOS
+MSET resultado:20-05-25:quina "15, 18, 25, 28, 32" resultado:19-05-25:QUINA "5, 8, 16, 38, 55" resultado:15-05-25:QUINA "15, 17, 23, 33, 40"
+
+
+SET sessao:1001:nome "Lucas" EX 60
+SET sessao:1001:email "lucas@exemplo.com" EX 60
+SET sessao:1001:login "2025-05-20" EX 60
+
+MSET sessao:1002:nome "Amanda" sessao:1002:email "amanda@exemplo.com" sessao:1002:login "2025-05-20"
+MSET sessao:1003:nome "João" sessao:1003:email "joao@exemplo.com" sessao:1003:login "2025-05-20"
+
+-Depois de um tempo
+TLL sessao:1001:nome sessao:1001:email sessao:1001:login
+MGET sessao:1001:nome sessao:1001:email sessao:1001:login
+
+- Se não existir mais 
+DEL sessao:1001:nome sessao:1001:email sessao:1001:login
+
+_______________________________________
+DATABASES
+- Ver quantos databases temos: 
+CONFIG GET databases
+
+- Mudar de databases: 
+SELECT (número do servidor)
+_______________________________________
+
+SCAN -> Não para o servidor para rodar, eu posso controlar como ele funciona
+KEYS -> Para o servidor para rodar
+ 
+SCAN cursor [MATCH padrão] [COUNT número]
+- cursor: Número de onde ele vai procurar (vamos usar 0)
+- COUNT: de quanto e quanto ele vai procurando (vamos ir usando 100, mas o padrão é 10)
+- MATCH: Faz um filtro por nome da Chave
+> retorna até qual parte ele foi, continue da onde parou, atualize o SCAN
+
+SCAN 0 equivalente a KEYS *, mas só mostra as 10 primeiras
+
+__________________________________________________
+HASH
+
+É uma estrutura de dados no redis que simula documentos (que nem no MongoDB)
+>> NÃO É POSSÍVEL PEGAR MAIS DE UMA CHAVE DE UMA VEZ
+
+- Criar uma ou mais chaves HASHs
+HSET [CHAVE] [campo] [valor] 
+> retorna quantos campos foram adicionados
+
+- Criar mais de uma chave HASHs
+HMSET [CHAVE] [campo1] [valor1] [campo2] [valor2] 
+> retorna quantos campos foram adicionados
+
+- Ver valor de uma chave HASH
+HGET [CAMPO] [Valor] 
+> retorna um valor
+
+- Ver valor de mais um campo de uma HASH (na ordem)
+HMGET [CHAVE] [Campo1] [Campo2]
+
+- Deletar um campo HASH
+HDEL [CHAVE] [CAMPO]
+
+- Ver todos os campos de uma chave HASH
+HKEYS [CHAVE] 
+
+- Ver todos os campos e valores de um HASH (trás a dupla de campo e valor)
+HGETALL [Chave]
+
+__________________________________________________
+LISTAS
+
+Vantagens:
+- Extremamente rápida
+- Permitem inserção e remoção em ambas as extremidade (funciona como pilha/fila)
+- Persistem na memória e podem ser expandidas dinamicamente
+Desvantangens: 
+- Só trabalha com strings
+- Não oferecem acesso aleatório eficiente (é difícil buscar elementos no meio) 
+
+
+- Adicionar Itens a Esquerda (Left) ou a direita (Direita) na lista, faz essa operação elemento por elemento
+[L/R]PUSH RPUSH [LISTA] [ITEM1] [ITEM2]
+
+- Ver itens de uma lista (de 0 até -1 pra ver ela toda)
+ LRANGE [LISTA] 0 -1
+
+- Ver tamanho da lista
+LLEN [LISTA]
+
+- Apagar itens de uma lista
+[L/P]POP [NOME DA LISTA] [quantidade de itens a ser apagados]
+(Da esquerda para direita) LPOP fila:pedidos 
+(Da direita para a esquerda) RPOP fila:pedidos
+
+- Deixar somente os elementos do meio da lista (não remove, ele picota)
+LTRIM [LISTA] de_que_elementos até_qual_elemento
+
+- REMOVER MAIS DE UM ELEMENTO DA LISTA
+LREM [LISTA] [COUNT] [Match do elemento]
+:: O COUNT é o numero de elementos que vai ser deletado, se for positivo são os primeiros, se for negativo remove os últimos
+:: COUNT 0 remove todos
+
+- Ver elemento de uma posição específica de uma lista
+LINDEX [LISTA] [índice]
+
+- Substituir ou modificar um valor de uma lista
+LSET [LISTA] [índice] [novo_valor]
+
+OS Ultimos são o das esquerda
+
+
+
+__________________________________________________
+CONJUNTOS 
+
+- Adicionando um ou mais membros a um conjunto
+SADD [NOME] valor1 valor2 valor3
+
+- Verifica os membros de um conjunto
+SMEMBERS [NOME]
+
+- Verificar se um valor existe no conjunto
+SISMEMBER [NOME] valor
+
+- Intersecção: Ver o que dois conjuntos tem em comum
+ SINTER [NOME] [NOME2]
+
+- União: Ver o que todos eles sabem
+SUNION [NOME] [NOME2] [NOME3]
+
+- Diferença: O que a primeira chave tem de diferente das outras
+SDIFF [NOME] [NOME2]
+
+- Remover um membro
+SREM [NOME] valor
+
+- Retorna o número de elementos de um conjunto
+SCARD [NOME]
+
+- Pegar um membro aleatório (se não colocar nada retorna 1)
+SRANDMEMBER [NOME] qnt_num
+
+- Remove um membro de um conjunto (se a quantidade for maior que o SCARD do conjunto remove TODOS OS ELEMENTOS e a chave, se for nada deleta um aleatório)
+SPOP [NOME] qnt_num
+
+
+

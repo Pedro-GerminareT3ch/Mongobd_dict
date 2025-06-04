@@ -6,3 +6,4 @@ sleep(5)
 
 ## Abrindo o MongoDB
 Popen(r'start cmd /K "cd C:\mongo\mongosh-2.3.8-win32-x64\bin && mongosh.exe"', shell=True)
+ 

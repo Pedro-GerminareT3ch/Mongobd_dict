@@ -826,6 +826,91 @@ whenNotMatche:
 )
 
 
+-- ÍNDICES
+Deixa as coisas já ordenas com o objetivo de otimizar as consultas
+
+db.clientes.getIndexes()
+- Key: Campo e em que ordem ele organiza (1 crescente, -1 decrescente)
+- Name: Nome do campo
+
+db.clientes.find({nome: /noah pedro/i}).explain("executionStats")
+- Monstra os status de execução
+- Verifica todos os documentos :: stage: 'COLLSCAN'
+
+db.clientes.find({_id:22}).explain("executionStats") 
+- Por ser pelo id só verifica um documentos (por índice) :: stage: 'EXPRESS_IXSCAN'
+
+Tranformar outro campo em id, ou seja, único
+unique: se vai ser único ou não
+- db.clientes.createIndex({cpf: 1}, {unique: true})
+
+executionTimeMillis :: Tempo total de execução da query
+
+
+Índices composto:
+- db.clientes.createIndex({nome: 1,cpf: 1})
+Quando você procurar pelo nome e cpf, ele vai procurar pelo índice pelo cpd
+Não precisa ser pela ordem na hora do find ou aggregat (ou qualquer forma de consulta)
+
+Se você fizer consultas muito recorrentes em campos que não são únicos para usuários, não tem problema transforma-los em indíces
+
+Campos importantes para saber se a consulta foi otimizada
+Total de documentos examinados e estágio (stage e keysExamined)
+
+
+Normalização
+Separar dados para as consultas
+- Ruim porque o ideal é que os dados sejam mais diferentes
+
+Desmoralização
+- Consultas, trazer informações gerais mais rápidas.
+- Sql, reduze o número de consultas, melhora a performance de leitura, dados que raramente mudam
+
+
+
+--------------------------------------------------------------------------------
+Modelagem de Banco de dados em MONGODB:
+--------------------------------------------------------------------------------
+Embedding (Incorporação): Documentos dentro de documentos
+Referencing (Referência): Relacionamento de documentos usando compôs de códigos (colunas)
+Hybrid (Modelagem Híbrida): Combina os dois, mistura de incorporação e referência
+
+COMO MODELAT UM BANCO NoSQL, métodos recomendados:
+- Frequência de leitura vs escrita: Embedding favorece leituras rápidas; referencing favorece atualizações localizadas.
+
+- Volume de dados aninhados: Se for alto, referencing evita que o documento cresça demais.
+
+- Atomicidade das operações: Embedding permite atualizações atômicas em um único documento.
+
+- Reutilização de dados: Dados compartilhados entre documentos devem ser referenciados para evitar inconsistências.
+
+
+Padrão Hierárquico (Tree Pattern): Só existe se o outro existe
+Buccker Pattern: Documentos relacionados em um único documento bucket, normalmente usado quando se quer agrupar eventos ou registros temporais (ex: transações, logs) de um mesmo tipo.
+
+============================================================
+MONGODUMP
+Dentro da PASTA: C:\mongo\mongosh-2.3.8-win32-x64\bin
+
+>> Criar um Backup dentro de alguma pasta 
+mongodump --db nome_banco --out "C:\Users\pedroalves-ieg\mongo"
+
+>> Recuperar um Banco
+mongorestore --db nome_banco "C:\Users\pedroalves-ieg\mongo\nome_banco"
+
+>> Substituir dados caso não existe (não fica com duplicados)
+mongorestore --db nome_banco --drop "C:\Users\pedroalves-ieg\mongo\nome_banco"
+============================================================
+
+
+
+
+
+
+
+
+
+
 
 
 
