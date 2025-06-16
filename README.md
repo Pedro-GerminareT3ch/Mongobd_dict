@@ -4,10 +4,17 @@
 Esse diretório no gitHub foi uma ideia dada por alguns amigos meus para auxiliar as pessoas na 
 matéria Banco de Dados II (Mongodb)<br>
 
-Fontes de informações do dicionário  
+Fontes de informações do dicionário de Mongo:
 Operadores: https://www.mongodb.com/pt-br/docs/manual/reference/operator/query/<br>
 Update: https://www.mongodb.com/pt-br/docs/manual/reference/operator/update/ <br>
 Métodos: https://www.mongodb.com/pt-br/docs/manual/reference/method/
+
+
+Fontes de informações do dicionário de REDIS:
+Comandos: https://redis.io/docs/latest/commands/
+Estruturas de Dados que o Redis suport: https://redis.io/pt/redis-enterprise/estruturas-de-dados/
+
+
 
 # Código do programa python:
 ```
