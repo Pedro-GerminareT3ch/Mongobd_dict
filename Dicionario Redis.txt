@@ -237,4 +237,90 @@ SRANDMEMBER [NOME] qnt_num
 SPOP [NOME] qnt_num
 
 
+__________________________________________________
+RANKING /SORTED SET:
+ZSET organizado em pares de valor-pontuação, não permite duplicados (mesmo de sempre), ordenado em pontuação (rank)
+
+Número(Int) - Membro(String)
+Organizado por: ordem numérica crescente, depois ordem alfabética do Membro(ACCI)
+
+
+Parâmetros
+[NX] - Adiciona somente se o membro ainda não existir
+[XX] - Atualiza somente se o membro já existir
+[CH] - Mostra se house mudança no Score
+[INCR] - Incrementa o socre do meme (retorna um novo score)
+[GT] - Adiciona somente o novo score se ele for maior que o anterior
+[LT] - Adiciona somente o novo score se ele for menor que o anterior
+
+Criar/ adicionar valor no ZSET	(retorna sempre quantos membros foream)
+-  ZADD [NOME] score membro
+
+exemplo:
+ZADD ranking_vendedores NX 1800 "Bruna"
+ZADD ranking_vendedores XX 2000 "Hugo"
+ZADD ranking_vendedores CH 2500 "Hugo"
+ZADD ranking_vendedores INCR 100 "Bruna"
+
+Mostrar o SORTEDSET:
+- ZRANGE [NOME] 0 -1
+- ZRANGE ranking_vendedores 0 -1 REV (Mostrar em ordem decrescente)
+- ZRANGE [NOME] 0 -1 WITHSCORES (com score)
+- ZRANGE ranking_vendedores 0 -1 REV WITHSCORES (com score decrescente)
+
+Mostrar score de um membro:
+- ZSCORE [NOME] membro
+
+Mostar a posição (RANK) de um membro
+- ZRANK [NOME] membro WITHSCORE
+- ZREVRANK [NOME] membro WITHSCORE (em ordem decrescente)
+
+Remover membro
+- ZREM [NOME] membro
+
+Remover por intervalo de score
+- ZREMRANGEBYSCORE [NOME] inicio fim
+
+Remover por intervalo de ranking:
+- ZREMRANGEBYSCORE [NOME] inicio fim
+- ZREMRANGEBYSCORE ranking_vendores 0 1000 (remover os que tem menos de 1000)
+
+Quantos tem nesse sorted SET:
+- ZCARD ranking_vendedores
+
+
+__________________________________________________
+BITMAP
+
+-- Ver o tamanho de uma string de uma chave
+STRLEN chave
+
+AND devolve 1 sempre que todos forem 1
+OR devolve 1 sempre que pelo menos um 1 for igual a 1
+NOT devolve o inverso, se for 1 retorna 0 e se for 0 retorna 1
+XOR: se a quantidade de 1 for par retorna 0, se for ímpar retorna 1 
+
+
+-- criar um  bitmap
+SETBIT [NOME] [POSIÇÃO] [VALOR BINÁRIO]
+retorna o bit anterior nessa posição
+
+
+-- Ver o valor dela na tabela ASCII
+GET [NOME BITMAP]
+
+-- Pegar o formato binário da sequência (entrar no bash)
+exit 
+docker exec -it redis bash
+redis-cli GET [NOME DA CHAVE] | xxd -b
+
+
+
+
+
+
+
+
+
+
 
