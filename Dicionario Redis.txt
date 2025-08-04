@@ -31,7 +31,6 @@ SET "chave" valor
 [EX] -> definir quanto tempo ela vai existir
 SET tempo "10 segundos" EX 10
 [NX] -> Cria a chave apenas se ela não existir
-
 [XX] -> Altera a chave, apenas se ela existir
 
 
@@ -157,7 +156,7 @@ HDEL [CHAVE] [CAMPO]
 HKEYS [CHAVE] 
 
 - Ver todos os campos e valores de um HASH (trás a dupla de campo e valor)
-HGETALL [Chave]
+HGETALLBITCOUNT  [Chave]
 
 __________________________________________________
 LISTAS
@@ -172,7 +171,8 @@ Desvantangens:
 
 
 - Adicionar Itens a Esquerda (Left) ou a direita (Direita) na lista, faz essa operação elemento por elemento
-[L/R]PUSH RPUSH [LISTA] [ITEM1] [ITEM2]
+[L/R]PUSH 
+(comum usado normalmente) RPUSH [LISTA] [ITEM1] [ITEM2]
 
 - Ver itens de uma lista (de 0 até -1 pra ver ela toda)
  LRANGE [LISTA] 0 -1
@@ -200,8 +200,6 @@ LINDEX [LISTA] [índice]
 LSET [LISTA] [índice] [novo_valor]
 
 OS Ultimos são o das esquerda
-
-
 
 __________________________________________________
 CONJUNTOS 
@@ -309,13 +307,13 @@ retorna o bit anterior nessa posição
 -- Ver o valor dela na tabela ASCII
 GET [NOME BITMAP]
 
+- Conta o número de bits definidos como 1 em uma chave
+BITCOUNT "nome_da_chave"
+
 -- Pegar o formato binário da sequência (entrar no bash)
 exit 
 docker exec -it redis bash
 redis-cli GET [NOME DA CHAVE] | xxd -b
-
-
-
 
 
 

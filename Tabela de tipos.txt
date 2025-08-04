@@ -15,7 +15,7 @@
 | JavaScript          | 13     | "javascript"    |            |
 | Símbolo             | 14     | "símbolo"       | Obsoleto.  |
 | Inteiro de bits     | 16     | "int"           |            |
-| Timestamp           | 17     | "carimbo de data/hora"|      |
+| Timestamp           | 17     | "data/hora"     |            |
 | Inteiro de 64 bits  | 18     | "long"          |            |
 | Decimal128          | 19     | "decimal"       |            |
 | Min key             | -1     | "minKey"        |            |
