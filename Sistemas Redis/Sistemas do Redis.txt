@@ -1,0 +1,5 @@
+
+PENSAMENTOS PARA A MODELAGEM:
+1. Pensar qual é o tipo de dados iremos usar no redis para armazenar as configurações?
+2. Qual é o padrão de nomenclatura de chaves?
+3. Documentação de forma clara.
